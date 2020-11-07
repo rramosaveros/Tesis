@@ -1,0 +1,37 @@
+version: '3.3'
+
+services:
+  payarafrontend:
+    image: registry.fieespoch.edu.ec/payaraserver:latest
+    ports:
+      - "8080:8080"
+      - "4848:4848"
+      - "8181:8181"
+    networks:
+      - traefik-public
+    deploy:
+      labels:
+        - traefik.enable=true
+        - traefik.docker.network=traefik-public
+        - traefik.constraint-label=traefik-public
+        - traefik.http.routers.payara-http.rule=Host(`${DOMAINSILABO?Variable not set}`)
+        - traefik.http.routers.payara-http.entrypoints=http
+        - traefik.http.routers.payara-http.middlewares=https-redirect
+        - traefik.http.routers.payara-https.rule=Host(`${DOMAINSILABO?Variable not set}`)
+        - traefik.http.routers.payara-https.entrypoints=https
+        - traefik.http.routers.payara-https.tls=true
+        - traefik.http.routers.payara-https.tls.certresolver=le
+        - traefik.http.services.payara.loadbalancer.server.port=8080
+      placement:
+        constraints:
+          - node.role == worker
+    volumes: 
+      - /hosthome/DockerCompose/Payara/Apps:/opt/payara/deployments
+
+networks:
+  traefik-public:
+    external: true
+
+# volumes:
+  # payaradeployapps: 
+     #external: true

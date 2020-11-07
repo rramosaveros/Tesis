@@ -1,0 +1,56 @@
+version: '3.3'
+
+services:
+  registry:
+      image: registry:2
+      environment:
+        # - REGISTRY_STORAGE_DELETE_ENABLED:"true"
+        # - REGISTRY_HTTP_HOST:registry.fieespoch.edu.ec
+        - REGISTRY_HTTP_ADDR:0.0.0.0:5000
+        - REGISTRY_HTTP_TLS_CERTIFICATE:/certs/registry.crt
+        - REGISTRY_HTTP_TLS_KEY:/certs/registry.key
+        # - REGISTRY_AUTH:htpasswd
+        # - REGISTRY_AUTH_HTPASSWD_PATH:/auth/htpasswd
+        # - REGISTRY_AUTH_HTPASSWD_REALM:Registry Realm
+        # LETSENCRYPT_HOST:let.fieespoch.edu.ec
+        # LETSENCRYPT_EMAIL:ramoslenin32@gmail.com
+      networks:
+        - traefik-public
+      deploy:
+        labels:
+          - traefik.enable=true
+          - traefik.docker.network=traefik-public
+          - traefik.constraint-label=traefik-public
+          - traefik.http.middlewares.admin2-auth.basicauth.users=${USERNAMEREGISTRY?Variable not set}:${HASHED_PASSWORD_REGISTRY?Variable not set},${USERNAMEREGISTRY2?Variable not set}:${HASHED_PASSWORD_REGISTRY2?Variable not set}
+          - traefik.http.middlewares.https-redirect.redirectscheme.scheme=https
+          - traefik.http.middlewares.https-redirect.redirectscheme.permanent=true
+          - traefik.http.routers.registry-http.rule=Host(`${DOMAINREGISTRY?Variable not set}`) && PathPrefix(`/v2`)
+          - traefik.http.routers.registry-http.entrypoints=http
+          - traefik.http.routers.registry-http.middlewares=https-redirect
+          - traefik.http.routers.registry-https.rule=Host(`${DOMAINREGISTRY?Variable not set}`) && PathPrefix(`/v2`)
+          - traefik.http.routers.registry-https.entrypoints=https
+          - traefik.http.routers.registry-https.tls=true
+          - traefik.http.routers.registry-https.tls.certresolver=le
+          - traefik.http.routers.registry-https.middlewares=admin2-auth
+          - traefik.http.services.registry.loadbalancer.server.port=5000
+        placement:
+          constraints:
+            - node.labels.registry == true
+        restart_policy:
+          condition: on-failure
+      volumes:
+        - /hosthome/DockerCompose/Registry/volumenregistry:/var/lib/registry
+        - /hosthome/DockerCompose/Registry/certs:/certs
+        # - /hosthome/DockerCompose/Registry/auth:/auth 
+
+networks:
+  traefik-public:
+    external: true
+
+# volumes:
+  # volumeregistry: 
+    # external: true
+  # volumeauthregistry: 
+    # external: true
+  # ies_traefik-public-certificates: 
+    # external: true

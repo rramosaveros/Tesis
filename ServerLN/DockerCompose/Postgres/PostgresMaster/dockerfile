@@ -1,0 +1,7 @@
+FROM postgres:9.6-alpine
+
+RUN apk add --update htop
+
+COPY ./postgresmaster.sh /docker-entrypoint-initdb.d/postgresmaster.sh
+
+RUN chmod 0666 /docker-entrypoint-initdb.d/postgresmaster.sh

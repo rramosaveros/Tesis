@@ -1,0 +1,35 @@
+version: '3.3'
+
+services:
+  visualizer:
+      image: registry.fieespoch.edu.ec/dockersamples/visualizer:latest
+      networks:
+        - traefik-public
+      deploy:
+        labels:
+          - traefik.enable=true
+          - traefik.docker.network=traefik-public
+          - traefik.constraint-label=traefik-public
+          - traefik.http.middlewares.admin3-auth.basicauth.users=${USERNAMEVISUALIZER?Variable not set}:${HASHED_PASSWORD_VISUALIZER?Variable not set}
+          - traefik.http.middlewares.https-redirect.redirectscheme.scheme=https
+          - traefik.http.middlewares.https-redirect.redirectscheme.permanent=true
+          - traefik.http.routers.visualizer-http.rule=Host(`${DOMAINVISUALIZER?Variable not set}`)
+          - traefik.http.routers.visualizer-http.entrypoints=http
+          - traefik.http.routers.visualizer-http.middlewares=https-redirect
+          - traefik.http.routers.visualizer-https.rule=Host(`${DOMAINVISUALIZER?Variable not set}`)
+          - traefik.http.routers.visualizer-https.entrypoints=https
+          - traefik.http.routers.visualizer-https.tls=true
+          - traefik.http.routers.visualizer-https.tls.certresolver=le
+          - traefik.http.routers.visualizer-https.middlewares=admin3-auth
+          - traefik.http.services.visualizer.loadbalancer.server.port=8080
+        placement:
+          constraints:
+            - node.role == manager
+        restart_policy:
+          condition: on-failure
+      volumes:
+        - /var/run/docker.sock:/var/run/docker.sock
+
+networks:
+  traefik-public:
+    external: true

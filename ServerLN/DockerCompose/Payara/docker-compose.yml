@@ -1,0 +1,29 @@
+version: '3.3'
+
+services:
+  payarabackend:
+    image: registryln.fieespoch.edu.ec/payaraserver:latest
+    ports:
+      - "8080:8080"
+      - "4848:4848"
+      - "8181:8181"
+    networks:
+      - traefik-public
+    deploy:
+      labels:
+        - traefik.enable=true
+        - traefik.docker.network=traefik-public
+        - traefik.constraint-label=traefik-public
+      placement:
+        constraints:
+          - node.role == worker
+    volumes: 
+      - /hosthome/DockerCompose/Payara/Apps:/opt/payara/deployments
+
+networks:
+  traefik-public:
+    external: true
+
+# volumes:
+  # payaradeployapps: 
+     #external: true

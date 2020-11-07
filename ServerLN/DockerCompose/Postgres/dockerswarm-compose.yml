@@ -1,0 +1,48 @@
+version: "3.3"
+
+services:
+  pg_master:
+    image: registryln.fieespoch.edu.ec/postgresmaster:9.6
+    ports:
+      - "5432:5432"
+    volumes:
+      # - /hosthome/DockerCompose/PostgresCompose/pg_data:/var/lib/postgresql/data
+      - datapostgres:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_USER=${USERPOS?Variable no configurada}
+      - POSTGRES_PASSWORD=${USERPASS?Variable no configurada}
+      - POSTGRES_DB=${NAMEDB?Variable no configurada}
+      - PG_REP_USER=${USERPGREP?Variable no configurada}
+      - PG_REP_PASSWORD=${PASSPGREP?Variable no configurada}
+    networks:
+      default:
+        aliases:
+          - pg_cluster
+    deploy:
+      placement:
+        constraints:
+        - node.labels.type == primary
+        - node.role == worker
+  pg_slave:
+    image: registryln.fieespoch.edu.ec/postgresslave:9.6
+    ports:
+      - "5433:5432"
+    environment:
+      - POSTGRES_USER=${USERPOS?Variable no configurada}
+      - POSTGRES_PASSWORD=${USERPASS?Variable no configurada}
+      - POSTGRES_DB=${NAMEDB?Variable no configurada}
+      - PG_REP_USER=${USERPGREP?Variable no configurada}
+      - PG_REP_PASSWORD=${PASSPGREP?Variable no configurada}
+      - PG_MASTER_HOST=pg_master
+    networks:
+      default:
+        aliases:
+          - pg_cluster
+    deploy:
+      placement:
+        constraints:
+        - node.labels.type != primary
+        - node.role == worker
+volumes:
+  datapostgres:
+
